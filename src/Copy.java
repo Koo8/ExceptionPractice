@@ -1,7 +1,11 @@
 import java.nio.file.*;
+
 import static java.nio.file.StandardCopyOption.*;
+
 import java.nio.file.attribute.*;
+
 import static java.nio.file.FileVisitResult.*;
+
 import java.io.IOException;
 import java.util.*;
 
@@ -9,13 +13,17 @@ import java.util.*;
  * Sample code that copies files in a similar manner to the cp(1) program.
  */
 
-public class CopyFileEX {
+public class Copy {
 
     /**
      * Returns {@code true} if okay to overwrite a  file ("cp -i")
      */
     static boolean okayToOverwrite(Path file) {
-        String answer = System.console().readLine("overwrite %s (yes/no)? ", file);
+        String answer = null;
+
+        answer = System.console().readLine("overwrite %s (yes/no)? ", file);
+
+
         return (answer.equalsIgnoreCase("y") || answer.equalsIgnoreCase("yes"));
     }
 
@@ -26,8 +34,8 @@ public class CopyFileEX {
      */
     static void copyFile(Path source, Path target, boolean prompt, boolean preserve) {
         CopyOption[] options = (preserve) ?
-                new CopyOption[] { COPY_ATTRIBUTES, REPLACE_EXISTING } :
-                new CopyOption[] { REPLACE_EXISTING };
+                new CopyOption[]{COPY_ATTRIBUTES, REPLACE_EXISTING} :
+                new CopyOption[]{REPLACE_EXISTING};
         if (!prompt || Files.notExists(target) || okayToOverwrite(target)) {
             try {
                 Files.copy(source, target, options);
@@ -53,12 +61,12 @@ public class CopyFileEX {
             this.preserve = preserve;
         }
 
-       @Override
+        @Override
         public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
             // before visiting entries in a directory we copy the directory
             // (okay if directory already exists).
             CopyOption[] options = (preserve) ?
-                    new CopyOption[] { COPY_ATTRIBUTES } : new CopyOption[0];
+                    new CopyOption[]{COPY_ATTRIBUTES} : new CopyOption[0];
 
             Path newdir = target.resolve(source.relativize(dir));
             try {
@@ -113,7 +121,7 @@ public class CopyFileEX {
 
     public static void main(String[] args) throws IOException {
         boolean recursive = false;
-        boolean prompt = false;
+        boolean prompt = false; // true will prompt evey file to be asked if an overwrite is needed.
         boolean preserve = false;
 
         // process options
@@ -124,13 +132,20 @@ public class CopyFileEX {
                 break;
             if (arg.length() < 2)
                 usage();
-            for (int i=1; i<arg.length(); i++) {
+            for (int i = 1; i < arg.length(); i++) {
                 char c = arg.charAt(i);
                 switch (c) {
-                    case 'r' : recursive = true; break;
-                    case 'i' : prompt = true; break;
-                    case 'p' : preserve = true; break;
-                    default : usage();
+                    case 'r':
+                        recursive = true;
+                        break;
+                    case 'i':
+                        prompt = true;
+                        break;
+                    case 'p':
+                        preserve = true;
+                        break;
+                    default:
+                        usage();
                 }
             }
             argi++;
@@ -140,8 +155,8 @@ public class CopyFileEX {
         int remaining = args.length - argi;
         if (remaining < 2)
             usage();
-        Path[] source = new Path[remaining-1];
-        int i=0;
+        Path[] source = new Path[remaining - 1];
+        int i = 0;
         while (remaining > 1) {
             source[i++] = Paths.get(args[argi++]);
             remaining--;
@@ -152,13 +167,15 @@ public class CopyFileEX {
         boolean isDir = Files.isDirectory(target);
 
         // copy each source file/directory to target
-        for (i=0; i<source.length; i++) {
+        for (i = 0; i < source.length; i++) {
             Path dest = (isDir) ? target.resolve(source[i].getFileName()) : target;
 
             if (recursive) {
                 // follow links when copying files
-                EnumSet<FileVisitOption> opts = EnumSet.of(FileVisitOption.FOLLOW_LINKS);
+                //this method keeps track of directories visited so that cycles can be detected.
+                EnumSet<FileVisitOption> opts = EnumSet.of(FileVisitOption.FOLLOW_LINKS); // this EnumSet is consisted of FOLLOW_LINKS memeber only
                 TreeCopier tc = new TreeCopier(source[i], dest, prompt, preserve);
+
                 Files.walkFileTree(source[i], opts, Integer.MAX_VALUE, tc);
             } else {
                 // not recursive so source must not be a directory

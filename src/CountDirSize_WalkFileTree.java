@@ -36,6 +36,8 @@ public class CountDirSize_WalkFileTree {
     public static class FileSizeCalculator extends SimpleFileVisitor<Path>  {
         // override 3 of 4 methods from FileVisitor class
         private long currentDirSize;
+        // use Queue to add each dir total size as an element, remove each in
+        // turn when postVisitDirtory()
         private Queue<Long> sizeOfParents = Collections.asLifoQueue(new LinkedList<>());
         private int counterDir = 0;
         @Override
