@@ -1,10 +1,14 @@
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.nio.file.attribute.*;
 import java.util.List;
 import java.util.Set;
+
+/**
+ * Haven't finished yet check https://www.programcreek.com/java-api-examples/?api=java.nio.file.attribute.AclEntry
+ * To continue -- https://docs.oracle.com/javase/tutorial/essential/io/fileAttr.html
+ * last time I read part of https://docs.oracle.com/javase/8/docs/api/java/nio/file/attribute/AclFileAttributeView.html
+ */
 
 public class FileAccessControl {
 
@@ -15,7 +19,9 @@ public class FileAccessControl {
     //"you have been dennied to access this folder"
     private static void makeFileNonReadable(String file) throws IOException {
         Path filePath = Paths.get(file);
-        Set<String> supportedAttr = filePath.getFileSystem().supportedFileAttributeViews();
+      //  Set<String> supportedAttr = filePath.getFileSystem().supportedFileAttributeViews();  // path.getFileSystem() get the file system that create this object
+        // can also use the following to get the fileAttributeViews set
+        Set<String> supportedAttr =  FileSystems.getDefault().supportedFileAttributeViews();  //
         System.out.println(supportedAttr); // [owner, dos, acl, basic, user]
         // how to set permission for PosixFileAttributeView
         if (supportedAttr.contains("posix")) {
@@ -42,5 +48,17 @@ public class FileAccessControl {
             acl.add(0, entry); // the DENY permission has to be added to index 0, othewise not working.
             view.setAcl(acl);
         }
+    }
+
+    private void addExecutePermission(String file) {
+        // get all fileAttributeView names for this File system
+        Path filePath = Paths.get(file);
+        Set<String> fileAttributeView = filePath.getFileSystem().supportedFileAttributeViews();
+       // FileSystems.getDefault()
+        if (fileAttributeView.contains("posix")) {
+            //
+        }
+        
+        
     }
 }
